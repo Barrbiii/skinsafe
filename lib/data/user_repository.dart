@@ -1,58 +1,79 @@
-/// Простое in-memory хранилище зарегистрированного пользователя.
-/// Синглтон — один экземпляр на всё приложение.
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../models/user_account.dart';
+import 'user_database.dart';
+
+/// Репозиторий пользователя.
+/// Работает с SQLite (учётные записи) и SharedPreferences
+/// (id активного пользователя между запусками приложения).
 class UserRepository {
   UserRepository._();
   static final UserRepository instance = UserRepository._();
 
-  UserAccount? _user;
+  static const String _prefsKeyActiveUserId = 'active_user_id';
 
-  bool get hasUser => _user != null;
+  UserAccount? _current;
 
-  UserAccount? get user => _user;
+  UserAccount? get user => _current;
+
+  bool get hasUser => _current != null;
+
+  /// Вызывается при старте приложения: подтягивает активного
+  /// пользователя из SharedPreferences, если он есть.
+  Future<void> init() async {
+    final prefs = await SharedPreferences.getInstance();
+    final id = prefs.getInt(_prefsKeyActiveUserId);
+    if (id == null) return;
+    _current = await UserDatabase.instance.findById(id);
+  }
 
   /// Регистрация. Возвращает null при успехе, иначе — текст ошибки.
-  String? register(UserAccount account) {
-    if (_user != null) {
-      return 'Аккаунт уже зарегистрирован. Выполните вход.';
+  Future<String?> register(UserAccount account) async {
+    final existing = await UserDatabase.instance.findByLogin(account.login);
+    if (existing != null) {
+      return 'Логин уже занят';
     }
-    _user = account;
+
+    final id = await UserDatabase.instance.insert(account);
+
+    // Сразу логиним пользователя
+    _current = UserAccount(
+      id: id,
+      login: account.login,
+      password: account.password,
+      faceSkinType: account.faceSkinType,
+      bodySkinType: account.bodySkinType,
+      scalpSkinType: account.scalpSkinType,
+      allergens: account.allergens,
+      age: account.age,
+      gender: account.gender,
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_prefsKeyActiveUserId, id);
     return null;
   }
 
-  /// Проверка логина и пароля. Возвращает null при успехе, иначе — текст ошибки.
-  String? authenticate(String login, String password) {
-    final u = _user;
+  /// Вход. Возвращает null при успехе, иначе — текст ошибки.
+  Future<String?> login(String login, String password) async {
+    final u = await UserDatabase.instance.findByLogin(login);
     if (u == null) {
-      return 'Аккаунт не найден. Сначала зарегистрируйтесь.';
-    }
-    if (u.login != login) {
-      return 'Неверный логин';
+      return 'Пользователь с таким логином не найден';
     }
     if (u.password != password) {
       return 'Неверный пароль';
     }
+    _current = u;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_prefsKeyActiveUserId, u.id!);
     return null;
   }
-}
 
-class UserAccount {
-  final String login;
-  final String password;
-  final String faceSkinType;
-  final String bodySkinType;
-  final String scalpSkinType;
-  final List<String> allergens;
-  final int age;
-  final String gender;
-
-  UserAccount({
-    required this.login,
-    required this.password,
-    required this.faceSkinType,
-    required this.bodySkinType,
-    required this.scalpSkinType,
-    required this.allergens,
-    required this.age,
-    required this.gender,
-  });
+  /// Выход: сбрасываем активного пользователя.
+  Future<void> logout() async {
+    _current = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_prefsKeyActiveUserId);
+  }
 }
