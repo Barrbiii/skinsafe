@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'data/user_repository.dart';
 import 'screens/welcome_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await UserRepository.instance.init();
   runApp(const SkinSafeApp());
 }
 
@@ -16,7 +19,7 @@ class SkinSafeApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF00897B), // teal
+          seedColor: const Color(0xFF00897B),
           brightness: Brightness.light,
         ),
         scaffoldBackgroundColor: const Color(0xFFF6F8F9),
