@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/user_repository.dart';
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -25,37 +26,46 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
+    // Сохраняем ссылки ДО await — после await context может стать невалидным
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
     setState(() => _loading = true);
 
-    // Небольшая задержка — имитация сетевого запроса
+    // Имитация сетевого запроса
     await Future.delayed(const Duration(milliseconds: 400));
+
+    if (!mounted) return;
 
     final error = UserRepository.instance.authenticate(
       _loginController.text.trim(),
       _passwordController.text,
     );
 
-    if (!mounted) return;
     setState(() => _loading = false);
 
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(content: Text(error), backgroundColor: Colors.redAccent),
       );
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    // Успех — сначала SnackBar, потом навигация
+    messenger.showSnackBar(
       const SnackBar(
         content: Text('Вход выполнен успешно'),
         backgroundColor: Colors.green,
+        duration: Duration(milliseconds: 800),
       ),
     );
 
-    // TODO: перейти на главный экран приложения
-    // Navigator.pushReplacement(
-    //   context, MaterialPageRoute(builder: (_) => const HomeScreen()),
-    // );
+    // pushReplacement через сохранённый navigator
+    await Future.delayed(const Duration(milliseconds: 200));
+    if (!mounted) return;
+    navigator.pushReplacement(
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+    );
   }
 
   @override
