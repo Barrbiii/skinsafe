@@ -27,10 +27,6 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
-	<key>NSCameraUsageDescription</key>
-    <string>Приложению нужен доступ к камере, чтобы сфотографировать упаковку средства.</string>
-    <key>NSPhotoLibraryUsageDescription</key>
-    <string>Приложению нужен доступ к галерее, чтобы выбрать фото упаковки.</string>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
@@ -70,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Приложению нужен доступ к камере, чтобы сфотографировать упаковку средства.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Приложению нужен доступ к галерее, чтобы выбрать фото упаковки.</string>
 </dict>
 </plist>
