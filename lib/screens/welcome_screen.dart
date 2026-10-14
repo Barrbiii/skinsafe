@@ -61,22 +61,16 @@ class WelcomeScreen extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: Colors.green.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.green.withOpacity(0.3),
-                      ),
+                      border: Border.all(color: Colors.green.withOpacity(0.3)),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.check_circle,
-                          color: Colors.green,
-                          size: 20,
-                        ),
+                        Icon(Icons.check_circle, color: Colors.green, size: 20),
                         SizedBox(width: 8),
                         Flexible(
                           child: Text(
-                            'Аккаунт зарегистрирован — можно войти',
+                            'Вы уже вошли в аккаунт',
                             style: TextStyle(color: Colors.green),
                           ),
                         ),
