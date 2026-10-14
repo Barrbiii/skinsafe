@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/user_repository.dart';
+import '../models/user_account.dart';
+import 'home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -30,6 +32,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   bool _obscurePass = true;
   bool _obscureConfirm = true;
+  bool _loading = false;
 
   final List<String> _skinTypes = [
     'Сухая',
@@ -44,13 +47,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void initState() {
     super.initState();
-    // Live-валидация совпадения паролей
     _passwordController.addListener(_onPasswordChanged);
     _confirmPasswordController.addListener(_onPasswordChanged);
   }
 
   void _onPasswordChanged() {
-    // Перезапускаем валидацию формы без её полного сброса
     if (_confirmPasswordController.text.isNotEmpty) {
       _formKey.currentState?.validate();
     }
@@ -128,8 +129,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   // ---------- Отправка ----------
 
-  void _submit() {
-    // Дополнительно перепроверяем совпадение паролей вне формы
+  Future<void> _submit() async {
     if (_passwordController.text != _confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Пароли не совпадают')),
@@ -138,6 +138,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     if (!(_formKey.currentState?.validate() ?? false)) return;
+
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+
+    setState(() => _loading = true);
 
     final allergens = _allergenControllers
         .map((c) => c.text.trim())
@@ -155,23 +160,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
       gender: _gender!,
     );
 
-    final error = UserRepository.instance.register(account);
+    final error = await UserRepository.instance.register(account);
+
+    if (!mounted) return;
+    setState(() => _loading = false);
+
     if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         SnackBar(content: Text(error), backgroundColor: Colors.redAccent),
       );
       return;
     }
 
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.showSnackBar(
       const SnackBar(
-        content: Text('Регистрация успешна! Теперь войдите.'),
+        content: Text('Регистрация успешна!'),
         backgroundColor: Colors.green,
+        duration: Duration(milliseconds: 800),
       ),
     );
 
-    // Возврат на экран входа/приветствия
-    Navigator.pop(context);
+    // После регистрации пользователь уже залогинен — сразу на главный экран.
+    navigator.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (route) => false,
+    );
   }
 
   @override
@@ -301,7 +314,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               TextFormField(
                 controller: _ageController,
                 keyboardType: TextInputType.number,
-                maxLength: 3, // максимум 3 цифры
+                maxLength: 3,
                 decoration: const InputDecoration(
                   labelText: 'Возраст',
                   helperText: 'От 14 до 100 лет',
@@ -330,7 +343,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               SizedBox(
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _submit,
+                  onPressed: _loading ? null : _submit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primary,
                     foregroundColor: Colors.white,
@@ -340,7 +353,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                   ),
-                  child: const Text(
+                  child: _loading
+                      ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.4,
+                      color: Colors.white,
+                    ),
+                  )
+                      : const Text(
                     'Зарегистрироваться',
                     style: TextStyle(
                       fontSize: 17,
