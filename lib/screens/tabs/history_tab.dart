@@ -6,12 +6,14 @@ class HistoryTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
+          padding: const EdgeInsets.only(bottom: 100),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
               Icon(
                 Icons.history,
                 size: 64,
@@ -35,6 +37,7 @@ class HistoryTab extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

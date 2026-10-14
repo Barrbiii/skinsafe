@@ -13,7 +13,7 @@ class HomeTab extends StatelessWidget {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 110),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

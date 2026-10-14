@@ -26,7 +26,7 @@ class AccountTab extends StatelessWidget {
 
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.fromLTRB(24, 24, 24, 110),
         children: [
           Row(
             children: [
