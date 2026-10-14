@@ -38,6 +38,7 @@ dependencies:
   # Локальная SQLite-база для хранения аккаунтов
   sqflite: ^2.3.3
   path: ^1.9.0
+  image_picker: ^1.1.2
 
   # Хранение id активного пользователя между запусками
   shared_preferences: ^2.3.2
