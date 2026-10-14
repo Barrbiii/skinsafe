@@ -54,8 +54,9 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
 
-    navigator.pushReplacement(
+    navigator.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const HomeScreen()),
+          (route) => false,
     );
   }
 
