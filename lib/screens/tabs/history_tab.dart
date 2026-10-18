@@ -9,10 +9,10 @@ class HistoryTab extends StatefulWidget {
   const HistoryTab({super.key});
 
   @override
-  State<HistoryTab> createState() => _HistoryTabState();
+  State<HistoryTab> createState() => HistoryTabState(); // ИСПРАВЛЕНО: публичный State
 }
 
-class _HistoryTabState extends State<HistoryTab> {
+class HistoryTabState extends State<HistoryTab> {
   late Future<List<ScanHistory>> _historyFuture;
 
   @override
@@ -28,6 +28,12 @@ class _HistoryTabState extends State<HistoryTab> {
     } else {
       _historyFuture = ScanHistoryRepository.instance.getForUser(userId);
     }
+  }
+
+  /// ИСПРАВЛЕНО: публичный метод для перезагрузки извне (HomeScreen).
+  void reload() {
+    if (!mounted) return;
+    setState(_loadHistory);
   }
 
   Future<void> _refresh() async {
@@ -54,6 +60,7 @@ class _HistoryTabState extends State<HistoryTab> {
           productType: scan.productType,
           initialIsSafe: scan.isSafe,
           scanId: scan.id,
+          imagePath: scan.imagePath, // ИСПРАВЛЕНО: передаём путь к фото
         ),
       ),
     );
@@ -134,7 +141,8 @@ class _HistoryTabState extends State<HistoryTab> {
                       contentPadding: const EdgeInsets.all(16),
                       leading: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: (scan.imagePath != null && File(scan.imagePath!).existsSync())
+                        child: (scan.imagePath != null &&
+                            File(scan.imagePath!).existsSync())
                             ? Image.file(
                           File(scan.imagePath!),
                           width: 48,
@@ -149,7 +157,9 @@ class _HistoryTabState extends State<HistoryTab> {
                               : Colors.redAccent.withValues(alpha: 0.15),
                           child: Icon(
                             scan.isSafe ? Icons.check : Icons.warning,
-                            color: scan.isSafe ? Colors.green : Colors.redAccent,
+                            color: scan.isSafe
+                                ? Colors.green
+                                : Colors.redAccent,
                           ),
                         ),
                       ),
@@ -160,11 +170,13 @@ class _HistoryTabState extends State<HistoryTab> {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(scan.productType, style: TextStyle(color: Colors.grey[600])),
+                          Text(scan.productType,
+                              style: TextStyle(color: Colors.grey[600])),
                           const SizedBox(height: 4),
                           Text(
                             '${scan.createdAt.day}.${scan.createdAt.month}.${scan.createdAt.year}',
-                            style: TextStyle(fontSize: 12, color: Colors.grey[400]),
+                            style: TextStyle(
+                                fontSize: 12, color: Colors.grey[400]),
                           ),
                         ],
                       ),
