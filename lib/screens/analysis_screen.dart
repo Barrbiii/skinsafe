@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/user_repository.dart';
+import '../data/scan_history_repository.dart';
+import '../models/scan_history.dart';
 
 class AnalysisScreen extends StatefulWidget {
   const AnalysisScreen({
@@ -21,6 +23,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   bool _isAnalyzing = true;
   List<String> _foundAllergens = [];
   bool _isSafe = true;
+  bool _saved = false;
 
   @override
   void initState() {
@@ -49,6 +52,24 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       _foundAllergens = found;
       _isSafe = found.isEmpty;
     });
+  }
+
+  Future<void> _saveToHistory() async {
+    final user = UserRepository.instance.user;
+    if (user?.id == null) return;
+
+    final scan = ScanHistory(
+      userId: user!.id!,
+      brand: widget.brand ?? 'Без бренда',
+      productType: widget.productType ?? 'Не указано',
+      composition: widget.composition,
+      isSafe: _isSafe,
+      createdAt: DateTime.now(),
+    );
+
+    await ScanHistoryRepository.instance.insert(scan);
+    if (!mounted) return;
+    setState(() => _saved = true);
   }
 
   @override
@@ -189,13 +210,51 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         ),
 
         const SizedBox(height: 32),
+
+        if (!_saved)
+          SizedBox(
+            height: 54,
+            child: ElevatedButton.icon(
+              onPressed: _saveToHistory,
+              icon: const Icon(Icons.save_alt),
+              label: const Text(
+                'Сохранить в историю',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ),
+        if (_saved)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            alignment: Alignment.center,
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.check_circle, color: Colors.green),
+                SizedBox(width: 8),
+                Text(
+                  'Сохранено в историю',
+                  style: TextStyle(color: Colors.green, fontSize: 16),
+                ),
+              ],
+            ),
+          ),
+
+        const SizedBox(height: 12),
         SizedBox(
           height: 54,
-          child: ElevatedButton(
+          child: OutlinedButton(
             onPressed: () => Navigator.pop(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: primary,
-              foregroundColor: Colors.white,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: primary,
+              side: BorderSide(color: primary, width: 2),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
             child: const Text('Готово', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
