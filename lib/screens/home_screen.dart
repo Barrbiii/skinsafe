@@ -14,6 +14,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _index = 1; // Главная посередине
 
+  // ИСПРАВЛЕНО: ключ для доступа к HistoryTabState и его reload()
+  final GlobalKey<HistoryTabState> _historyKey = GlobalKey<HistoryTabState>();
+
   static const _titles = ['История', 'SkinSafe', 'Аккаунт'];
 
   @override
@@ -29,15 +32,21 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         body: IndexedStack(
           index: _index,
-          children: const [
-            HistoryTab(),
-            HomeTab(),
-            AccountTab(),
+          children: [
+            HistoryTab(key: _historyKey), // ИСПРАВЛЕНО: с ключом
+            const HomeTab(),
+            const AccountTab(),
           ],
         ),
         bottomNavigationBar: FloatingNavBar(
           index: _index,
-          onChanged: (i) => setState(() => _index = i),
+          onChanged: (i) {
+            setState(() => _index = i);
+            // ИСПРАВЛЕНО: при переходе на вкладку "История" — обновляем данные
+            if (i == 0) {
+              _historyKey.currentState?.reload();
+            }
+          },
         ),
       ),
     );
