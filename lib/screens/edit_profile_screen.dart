@@ -1,4 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import '../data/user_repository.dart';
 import '../models/user_account.dart';
@@ -24,7 +28,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   final List<TextEditingController> _allergenControllers = [];
 
+  String? _avatarPath;
+  bool _avatarChanged = false;
   bool _loading = false;
+
+  final ImagePicker _picker = ImagePicker();
 
   final List<String> _skinTypes = [
     'Сухая',
@@ -47,6 +55,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _bodySkinType = user.bodySkinType;
     _scalpSkinType = user.scalpSkinType;
     _gender = user.gender;
+    _avatarPath = user.avatarPath;
 
     if (user.allergens.isEmpty) {
       _allergenControllers.add(TextEditingController());
@@ -93,6 +102,121 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     return null;
   }
 
+  // ---------- Аватарка ----------
+
+  Future<void> _pickAvatarSource() async {
+    final choice = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(16),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_camera_outlined),
+                title: const Text('Сделать фото'),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library_outlined),
+                title: const Text('Выбрать из галереи'),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+              if (_avatarPath != null)
+                ListTile(
+                  leading: const Icon(
+                    Icons.delete_outline,
+                    color: Colors.redAccent,
+                  ),
+                  title: const Text(
+                    'Удалить фото',
+                    style: TextStyle(color: Colors.redAccent),
+                  ),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    setState(() {
+                      _avatarPath = null;
+                      _avatarChanged = true;
+                    });
+                  },
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (choice == null) return;
+
+    try {
+      final picked = await _picker.pickImage(
+        source: choice,
+        imageQuality: 85,
+        maxWidth: 800,
+      );
+      if (picked == null) return;
+
+      final saved = await _saveAvatarLocally(File(picked.path));
+      if (!mounted) return;
+      setState(() {
+        _avatarPath = saved;
+        _avatarChanged = true;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString().contains('Camera not available')
+                ? 'Камера недоступна (в симуляторе её нет). Выберите фото из галереи.'
+                : 'Не удалось получить изображение: $e',
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
+
+  /// Копирует выбранный файл в директорию приложения,
+  /// чтобы путь не «умер» вместе с временным кэшем iOS/Android.
+  Future<String> _saveAvatarLocally(File source) async {
+    final dir = await getApplicationDocumentsDirectory();
+    final fileName = 'avatar_${DateTime.now().millisecondsSinceEpoch}${p.extension(source.path)}';
+    final saved = await source.copy(p.join(dir.path, fileName));
+
+    // Удаляем прошлый аватар, если он лежал в той же папке
+    final oldPath = _avatarPath;
+    if (oldPath != null && oldPath.isNotEmpty) {
+      final oldFile = File(oldPath);
+      if (oldFile.existsSync() && oldPath != saved.path) {
+        try {
+          await oldFile.delete();
+        } catch (_) {
+          // не критично
+        }
+      }
+    }
+    return saved.path;
+  }
+
+  // ---------- Сохранение ----------
+
   Future<void> _save() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
@@ -109,19 +233,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         .where((s) => s.isNotEmpty)
         .toList();
 
-    final updated = UserAccount(
-      id: current.id,
-      login: current.login,
-      password: current.password,
-      faceSkinType: _faceSkinType!,
-      bodySkinType: _bodySkinType!,
-      scalpSkinType: _scalpSkinType!,
+    final updated = current.copyWith(
+      faceSkinType: _faceSkinType,
+      bodySkinType: _bodySkinType,
+      scalpSkinType: _scalpSkinType,
       allergens: allergens,
       age: int.parse(_ageController.text.trim()),
-      gender: _gender!,
+      gender: _gender,
     );
 
-    final error = await UserRepository.instance.updateProfile(updated);
+    var error = await UserRepository.instance.updateProfile(updated);
+
+    if (error == null && _avatarChanged) {
+      error = await UserRepository.instance.updateAvatar(_avatarPath);
+    }
 
     if (!mounted) return;
     setState(() => _loading = false);
@@ -141,8 +266,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ),
     );
 
-    navigator.pop(true); // true = были изменения
+    navigator.pop(true);
   }
+
+  // ---------- UI ----------
 
   @override
   Widget build(BuildContext context) {
@@ -170,8 +297,48 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 'Логин и пароль изменить нельзя',
                 style: TextStyle(color: Colors.grey[600], fontSize: 13),
               ),
-              const SizedBox(height: 28),
+              const SizedBox(height: 20),
 
+              // Блок аватарки
+              Center(
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: _pickAvatarSource,
+                      child: Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          _EditableAvatar(
+                            avatarPath: _avatarPath,
+                            color: primary,
+                            size: 96,
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 2),
+                            ),
+                            child: const Icon(
+                              Icons.edit,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton(
+                      onPressed: _pickAvatarSource,
+                      child: const Text('Сменить фото'),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
               _sectionTitle('Тип кожи'),
               const SizedBox(height: 12),
               _skinDropdown(
@@ -338,5 +505,44 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       );
     });
+  }
+}
+
+class _EditableAvatar extends StatelessWidget {
+  const _EditableAvatar({
+    required this.avatarPath,
+    required this.color,
+    required this.size,
+  });
+
+  final String? avatarPath;
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasFile = avatarPath != null && avatarPath!.isNotEmpty;
+    final fileExists = hasFile && File(avatarPath!).existsSync();
+
+    return ClipOval(
+      child: Container(
+        width: size,
+        height: size,
+        color: color.withValues(alpha: 0.15),
+        child: (hasFile && fileExists)
+            ? Image.file(
+          File(avatarPath!),
+          fit: BoxFit.cover,
+          width: size,
+          height: size,
+          errorBuilder: (_, __, ___) => _fallback(size),
+        )
+            : _fallback(size),
+      ),
+    );
+  }
+
+  Widget _fallback(double size) {
+    return Icon(Icons.person, size: size * 0.56, color: color);
   }
 }
