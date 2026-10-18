@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../data/user_repository.dart';
 import '../data/scan_history_repository.dart';
@@ -11,17 +12,15 @@ class AnalysisScreen extends StatefulWidget {
     this.productType,
     this.initialIsSafe,
     this.scanId,
+    this.imagePath, // <-- НОВОЕ ПОЛЕ
   });
 
   final String composition;
   final String? brand;
   final String? productType;
-
-  /// Если передано, экран сразу покажет результат без загрузки.
   final bool? initialIsSafe;
-
-  /// Если передано, значит мы открыли запись из истории.
   final int? scanId;
+  final String? imagePath; // <-- НОВОЕ ПОЛЕ
 
   @override
   State<AnalysisScreen> createState() => _AnalysisScreenState();
@@ -37,7 +36,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   void initState() {
     super.initState();
     if (widget.initialIsSafe != null) {
-      // Мы открыли готовую запись из истории
       _isAnalyzing = false;
       _isSafe = widget.initialIsSafe!;
       _findAllergensInComposition();
@@ -104,6 +102,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       composition: widget.composition,
       isSafe: _isSafe,
       createdAt: DateTime.now(),
+      imagePath: widget.imagePath, // <-- ПЕРЕДАЕМ ПУТЬ
     );
 
     await ScanHistoryRepository.instance.insert(scan);
@@ -140,7 +139,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Удалено из истории')),
     );
-    Navigator.pop(context, true); // Возвращаем true, чтобы HistoryTab обновился
+    Navigator.pop(context, true);
   }
 
   @override
@@ -185,6 +184,21 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
+        // --- БЛОК С ФОТО ---
+        if (widget.imagePath != null && File(widget.imagePath!).existsSync()) ...[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.file(
+              File(widget.imagePath!),
+              height: 200,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+        // -------------------
+
         if (widget.brand != null || widget.productType != null) ...[
           Text(
             [widget.brand, widget.productType].where((e) => e != null).join(' · '),
@@ -281,7 +295,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
         const SizedBox(height: 32),
 
-        // Кнопка удаления, если открыто из истории
         if (widget.scanId != null)
           SizedBox(
             height: 54,
@@ -299,7 +312,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               ),
             ),
           )
-        else if (!_saved) // Иначе показываем "Сохранить", если еще не сохранено
+        else if (!_saved)
           SizedBox(
             height: 54,
             child: ElevatedButton.icon(
