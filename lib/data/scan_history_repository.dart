@@ -40,6 +40,17 @@ class ScanHistoryRepository {
     return rows.isNotEmpty;
   }
 
+  /// ИСПРАВЛЕНО: обновление пути к фото у существующей записи.
+  Future<int> updateImagePath(int id, String? imagePath) async {
+    final db = await UserDatabase.instance.open();
+    return db.update(
+      _table,
+      {'image_path': imagePath},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   Future<void> delete(int id) async {
     final db = await UserDatabase.instance.open();
     await db.delete(_table, where: 'id = ?', whereArgs: [id]);
