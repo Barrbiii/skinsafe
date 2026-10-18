@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../analysis_screen.dart';
 import 'package:flutter/material.dart';
 import '../../data/scan_history_repository.dart';
@@ -131,13 +132,25 @@ class _HistoryTabState extends State<HistoryTab> {
                     child: ListTile(
                       onTap: () => _openScan(scan),
                       contentPadding: const EdgeInsets.all(16),
-                      leading: CircleAvatar(
-                        backgroundColor: scan.isSafe
-                            ? Colors.green.withValues(alpha: 0.15)
-                            : Colors.redAccent.withValues(alpha: 0.15),
-                        child: Icon(
-                          scan.isSafe ? Icons.check : Icons.warning,
-                          color: scan.isSafe ? Colors.green : Colors.redAccent,
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: (scan.imagePath != null && File(scan.imagePath!).existsSync())
+                            ? Image.file(
+                          File(scan.imagePath!),
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                        )
+                            : Container(
+                          width: 48,
+                          height: 48,
+                          color: scan.isSafe
+                              ? Colors.green.withValues(alpha: 0.15)
+                              : Colors.redAccent.withValues(alpha: 0.15),
+                          child: Icon(
+                            scan.isSafe ? Icons.check : Icons.warning,
+                            color: scan.isSafe ? Colors.green : Colors.redAccent,
+                          ),
                         ),
                       ),
                       title: Text(
