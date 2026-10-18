@@ -9,7 +9,7 @@ class UserDatabase {
   static final UserDatabase instance = UserDatabase._();
 
   static const String _dbName = 'skinsafe.db';
-  static const int _dbVersion = 1;
+  static const int _dbVersion = 2;
   static const String _table = 'users';
 
   Database? _db;
@@ -21,23 +21,25 @@ class UserDatabase {
       path,
       version: _dbVersion,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
     return _db!;
   }
 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE $_table (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        login TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL,
-        face_skin_type TEXT NOT NULL,
-        body_skin_type TEXT NOT NULL,
-        scalp_skin_type TEXT NOT NULL,
-        allergens TEXT NOT NULL DEFAULT '',
-        age INTEGER NOT NULL,
-        gender TEXT NOT NULL
-      )
+    CREATE TABLE $_table (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      login TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL,
+      face_skin_type TEXT NOT NULL,
+      body_skin_type TEXT NOT NULL,
+      scalp_skin_type TEXT NOT NULL,
+      allergens TEXT NOT NULL DEFAULT '',
+      age INTEGER NOT NULL,
+      gender TEXT NOT NULL,
+      avatar_path TEXT
+    )
     ''');
   }
 
@@ -45,6 +47,13 @@ class UserDatabase {
   Future<int> insert(UserAccount account) async {
     final db = await _open();
     return db.insert(_table, account.toMap()..remove('id'));
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    // v1 → v2: добавлена колонка avatar_path
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE $_table ADD COLUMN avatar_path TEXT');
+    }
   }
 
   /// Обновление существующего пользователя по id.
