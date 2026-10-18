@@ -227,7 +227,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                value: _gender,
+                initialValue: _gender,
                 decoration: const InputDecoration(
                   labelText: 'Пол',
                   prefixIcon: Icon(Icons.wc_outlined),
@@ -293,7 +293,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     required ValueChanged<String?> onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: const Icon(Icons.face_retouching_natural),
