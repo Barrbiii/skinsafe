@@ -1,3 +1,4 @@
+import '../analysis_screen.dart';
 import 'package:flutter/material.dart';
 import '../../data/scan_history_repository.dart';
 import '../../data/user_repository.dart';
@@ -40,6 +41,25 @@ class _HistoryTabState extends State<HistoryTab> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Удалено из истории')),
     );
+  }
+
+  Future<void> _openScan(ScanHistory scan) async {
+    final deleted = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AnalysisScreen(
+          composition: scan.composition,
+          brand: scan.brand,
+          productType: scan.productType,
+          initialIsSafe: scan.isSafe,
+          scanId: scan.id,
+        ),
+      ),
+    );
+    // Если вернулось true, значит запись удалили внутри экрана
+    if (deleted == true && mounted) {
+      setState(_loadHistory);
+    }
   }
 
   @override
@@ -109,6 +129,7 @@ class _HistoryTabState extends State<HistoryTab> {
                       side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
                     ),
                     child: ListTile(
+                      onTap: () => _openScan(scan),
                       contentPadding: const EdgeInsets.all(16),
                       leading: CircleAvatar(
                         backgroundColor: scan.isSafe
