@@ -14,7 +14,8 @@ class UserDatabase {
 
   Database? _db;
 
-  Future<Database> _open() async {
+  /// Единая точка входа для всей БД в проекте.
+  Future<Database> open() async {
     if (_db != null) return _db!;
     final path = join(await getDatabasesPath(), _dbName);
     _db = await openDatabase(
@@ -75,6 +76,7 @@ class UserDatabase {
         )
       ''');
     }
+    // v3 → v4: добавлена колонка image_path
     if (oldVersion < 4) {
       await db.execute('ALTER TABLE $_scansTable ADD COLUMN image_path TEXT');
     }
@@ -82,17 +84,16 @@ class UserDatabase {
 
   /// Вставка нового пользователя. Возвращает id.
   Future<int> insert(UserAccount account) async {
-    final db = await _open();
+    final db = await open();
     return db.insert(_usersTable, account.toMap()..remove('id'));
   }
 
   /// Обновление существующего пользователя по id.
-  /// Возвращает количество затронутых строк (0, если не найден).
   Future<int> update(UserAccount account) async {
     if (account.id == null) {
       throw ArgumentError('Нельзя обновить пользователя без id');
     }
-    final db = await _open();
+    final db = await open();
     return db.update(
       _usersTable,
       account.toMap()..remove('id'),
@@ -101,9 +102,9 @@ class UserDatabase {
     );
   }
 
-  /// Поиск по логину. Возвращает null, если не найден.
+  /// Поиск по логину.
   Future<UserAccount?> findByLogin(String login) async {
-    final db = await _open();
+    final db = await open();
     final rows = await db.query(
       _usersTable,
       where: 'login = ?',
@@ -116,7 +117,7 @@ class UserDatabase {
 
   /// Поиск по id.
   Future<UserAccount?> findById(int id) async {
-    final db = await _open();
+    final db = await open();
     final rows = await db.query(
       _usersTable,
       where: 'id = ?',
@@ -127,9 +128,9 @@ class UserDatabase {
     return UserAccount.fromMap(rows.first);
   }
 
-  /// Очистить таблицу пользователей (пригодится при отладке).
+  /// Очистить таблицу пользователей.
   Future<void> clear() async {
-    final db = await _open();
+    final db = await open();
     await db.delete(_usersTable);
   }
 }
