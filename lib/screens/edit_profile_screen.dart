@@ -5,7 +5,6 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import '../data/user_repository.dart';
-import '../models/user_account.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
