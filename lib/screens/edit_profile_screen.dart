@@ -534,7 +534,7 @@ class _EditableAvatar extends StatelessWidget {
           fit: BoxFit.cover,
           width: size,
           height: size,
-          errorBuilder: (_, __, ___) => _fallback(size),
+          errorBuilder: (_, _, _) => _fallback(size),
         )
             : _fallback(size),
       ),

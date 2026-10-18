@@ -163,7 +163,7 @@ class _AvatarCircle extends StatelessWidget {
           fit: BoxFit.cover,
           width: size,
           height: size,
-          errorBuilder: (_, __, ___) => _fallbackIcon(size),
+          errorBuilder: (_, _, _) => _fallbackIcon(size),
         )
             : _fallbackIcon(size),
       ),
