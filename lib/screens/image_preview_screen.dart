@@ -1,3 +1,4 @@
+import 'analysis_screen.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 
@@ -48,10 +49,15 @@ class ImagePreviewScreen extends StatelessWidget {
                     height: 54,
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Распознавание состава появится позже',
+                        // В будущем здесь будет реальный OCR, а пока заглушка
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AnalysisScreen(
+                              composition:
+                              'Aqua, Glycerin, Niacinamide, Parfum, Limonene',
+                              brand: 'Распознано с фото',
+                              productType: 'Крем',
                             ),
                           ),
                         );
