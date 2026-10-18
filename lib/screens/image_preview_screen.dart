@@ -53,7 +53,7 @@ class ImagePreviewScreen extends StatelessWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const AnalysisScreen(
+                            builder: (_) => AnalysisScreen(
                               composition:
                               'Aqua, Aloe barbadensis leaf juice, Propylene Glycol, Glycerin, Sorbitol, Panthenol, Sodium Hyaluronate, Allantoin, Sodium Carbomer, Citric Acid, Sodium Hydroxide, Phenoxyethanol',
                               brand: 'Распознано с фото',
