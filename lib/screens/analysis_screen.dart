@@ -9,11 +9,19 @@ class AnalysisScreen extends StatefulWidget {
     required this.composition,
     this.brand,
     this.productType,
+    this.initialIsSafe,
+    this.scanId,
   });
 
   final String composition;
   final String? brand;
   final String? productType;
+
+  /// Если передано, экран сразу покажет результат без загрузки.
+  final bool? initialIsSafe;
+
+  /// Если передано, значит мы открыли запись из истории.
+  final int? scanId;
 
   @override
   State<AnalysisScreen> createState() => _AnalysisScreenState();
@@ -28,13 +36,18 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   @override
   void initState() {
     super.initState();
-    _analyze();
+    if (widget.initialIsSafe != null) {
+      // Мы открыли готовую запись из истории
+      _isAnalyzing = false;
+      _isSafe = widget.initialIsSafe!;
+      _findAllergensInComposition();
+      _saved = true;
+    } else {
+      _analyze();
+    }
   }
 
-  Future<void> _analyze() async {
-    // Имитация работы нейросети
-    await Future.delayed(const Duration(seconds: 2));
-
+  void _findAllergensInComposition() {
     final user = UserRepository.instance.user;
     final userAllergens = user?.allergens ?? [];
     final compositionLower = widget.composition.toLowerCase();
@@ -45,12 +58,16 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         found.add(allergen);
       }
     }
+    _foundAllergens = found;
+    _isSafe = found.isEmpty;
+  }
 
+  Future<void> _analyze() async {
+    await Future.delayed(const Duration(seconds: 2));
+    _findAllergensInComposition();
     if (!mounted) return;
     setState(() {
       _isAnalyzing = false;
-      _foundAllergens = found;
-      _isSafe = found.isEmpty;
     });
   }
 
@@ -94,6 +111,38 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     setState(() => _saved = true);
   }
 
+  Future<void> _deleteFromHistory() async {
+    if (widget.scanId == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Удалить запись?'),
+        content: const Text('Вы уверены, что хотите удалить этот анализ из истории?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Отмена'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Удалить', style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    await ScanHistoryRepository.instance.delete(widget.scanId!);
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Удалено из истории')),
+    );
+    Navigator.pop(context, true); // Возвращаем true, чтобы HistoryTab обновился
+  }
+
   @override
   Widget build(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
@@ -103,7 +152,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         title: const Text('Анализ состава'),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading: !_isAnalyzing, // Не даем уйти во время анализа
+        automaticallyImplyLeading: !_isAnalyzing,
       ),
       body: SafeArea(
         child: _isAnalyzing ? _buildLoading(primary) : _buildResult(primary),
@@ -145,7 +194,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           const SizedBox(height: 16),
         ],
 
-        // Плашка результата
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
@@ -233,7 +281,25 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
         const SizedBox(height: 32),
 
-        if (!_saved)
+        // Кнопка удаления, если открыто из истории
+        if (widget.scanId != null)
+          SizedBox(
+            height: 54,
+            child: OutlinedButton.icon(
+              onPressed: _deleteFromHistory,
+              icon: const Icon(Icons.delete_outline),
+              label: const Text(
+                'Удалить из истории',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.redAccent,
+                side: const BorderSide(color: Colors.redAccent, width: 2),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              ),
+            ),
+          )
+        else if (!_saved) // Иначе показываем "Сохранить", если еще не сохранено
           SizedBox(
             height: 54,
             child: ElevatedButton.icon(
@@ -246,13 +312,11 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               ),
             ),
-          ),
-        if (_saved)
+          )
+        else
           Container(
             padding: const EdgeInsets.symmetric(vertical: 12),
             alignment: Alignment.center,
