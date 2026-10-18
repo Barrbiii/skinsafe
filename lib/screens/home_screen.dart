@@ -15,7 +15,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _index = 1; // Главная посередине
 
   static const _titles = ['История', 'SkinSafe', 'Аккаунт'];
-  static const _tabs = [HistoryTab(), HomeTab(), AccountTab()];
 
   @override
   Widget build(BuildContext context) {

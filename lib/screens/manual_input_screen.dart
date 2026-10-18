@@ -91,7 +91,7 @@ class _ManualInputScreenState extends State<ManualInputScreen> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                value: _productType,
+                initialValue: _productType,
                 decoration: const InputDecoration(
                   labelText: 'Тип средства',
                   prefixIcon: Icon(Icons.category_outlined),
@@ -105,7 +105,7 @@ class _ManualInputScreenState extends State<ManualInputScreen> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                value: _bodyPart,
+                initialValue: _bodyPart,
                 decoration: const InputDecoration(
                   labelText: 'Для какой части тела',
                   prefixIcon: Icon(Icons.accessibility_new),

@@ -326,7 +326,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 16),
 
               DropdownButtonFormField<String>(
-                value: _gender,
+                initialValue: _gender,
                 decoration: const InputDecoration(
                   labelText: 'Пол',
                   prefixIcon: Icon(Icons.wc_outlined),
@@ -348,7 +348,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     backgroundColor: primary,
                     foregroundColor: Colors.white,
                     elevation: 4,
-                    shadowColor: primary.withOpacity(0.5),
+                    shadowColor: primary.withValues(alpha: 0.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -393,7 +393,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required ValueChanged<String?> onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: const Icon(Icons.face_retouching_natural),

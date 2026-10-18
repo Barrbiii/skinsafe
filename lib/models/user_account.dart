@@ -8,6 +8,7 @@ class UserAccount {
   final List<String> allergens;
   final int age;
   final String gender;
+  final String? avatarPath;
 
   UserAccount({
     this.id,
@@ -19,6 +20,7 @@ class UserAccount {
     required this.allergens,
     required this.age,
     required this.gender,
+    this.avatarPath,
   });
 
   /// Преобразование в Map для записи в SQLite.
@@ -34,6 +36,7 @@ class UserAccount {
       'allergens': allergens.join('|'),
       'age': age,
       'gender': gender,
+      'avatar_path': avatarPath,
     };
   }
 
@@ -50,6 +53,35 @@ class UserAccount {
       allergens: rawAllergens.isEmpty ? [] : rawAllergens.split('|'),
       age: map['age'] as int,
       gender: map['gender'] as String,
+      avatarPath: map['avatar_path'] as String?,
+    );
+  }
+
+  /// Удобный метод копирования с изменением отдельных полей.
+  UserAccount copyWith({
+    int? id,
+    String? login,
+    String? password,
+    String? faceSkinType,
+    String? bodySkinType,
+    String? scalpSkinType,
+    List<String>? allergens,
+    int? age,
+    String? gender,
+    String? avatarPath,
+    bool clearAvatar = false,
+  }) {
+    return UserAccount(
+      id: id ?? this.id,
+      login: login ?? this.login,
+      password: password ?? this.password,
+      faceSkinType: faceSkinType ?? this.faceSkinType,
+      bodySkinType: bodySkinType ?? this.bodySkinType,
+      scalpSkinType: scalpSkinType ?? this.scalpSkinType,
+      allergens: allergens ?? this.allergens,
+      age: age ?? this.age,
+      gender: gender ?? this.gender,
+      avatarPath: clearAvatar ? null : (avatarPath ?? this.avatarPath),
     );
   }
 }

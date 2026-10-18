@@ -88,7 +88,7 @@ class _BigOptionCard extends StatelessWidget {
       color: Colors.white,
       borderRadius: BorderRadius.circular(18),
       elevation: 2,
-      shadowColor: color.withOpacity(0.2),
+      shadowColor: color.withValues(alpha: 0.2),
       child: InkWell(
         borderRadius: BorderRadius.circular(18),
         onTap: onTap,
@@ -100,7 +100,7 @@ class _BigOptionCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.12),
+                  color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(icon, size: 30, color: color),

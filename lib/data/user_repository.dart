@@ -70,6 +70,49 @@ class UserRepository {
     return null;
   }
 
+  /// Обновление профиля текущего пользователя.
+  /// Возвращает null при успехе, иначе — текст ошибки.
+  Future<String?> updateProfile(UserAccount updated) async {
+    if (_current == null) {
+      return 'Нет активного пользователя';
+    }
+    if (updated.id != _current!.id) {
+      return 'Нельзя изменить чужой профиль';
+    }
+    try {
+      final rows = await UserDatabase.instance.update(updated);
+      if (rows == 0) {
+        return 'Не удалось обновить профиль';
+      }
+      _current = updated;
+      return null;
+    } catch (e) {
+      return 'Ошибка при обновлении: $e';
+    }
+  }
+
+  /// Обновление пути к аватарке текущего пользователя.
+  /// Возвращает null при успехе, иначе — текст ошибки.
+  Future<String?> updateAvatar(String? path) async {
+    if (_current == null) {
+      return 'Нет активного пользователя';
+    }
+    try {
+      final updated = _current!.copyWith(
+        avatarPath: path,
+        clearAvatar: path == null,
+      );
+      final rows = await UserDatabase.instance.update(updated);
+      if (rows == 0) {
+        return 'Не удалось обновить аватарку';
+      }
+      _current = updated;
+      return null;
+    } catch (e) {
+      return 'Ошибка при обновлении аватарки: $e';
+    }
+  }
+
   /// Выход: сбрасываем активного пользователя.
   Future<void> logout() async {
     _current = null;

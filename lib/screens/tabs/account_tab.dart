@@ -1,18 +1,36 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../data/user_repository.dart';
+import '../edit_profile_screen.dart';
 import '../welcome_screen.dart';
 
-class AccountTab extends StatelessWidget {
+class AccountTab extends StatefulWidget {
   const AccountTab({super.key});
 
-  Future<void> _logout(BuildContext context) async {
+  @override
+  State<AccountTab> createState() => _AccountTabState();
+}
+
+class _AccountTabState extends State<AccountTab> {
+  Future<void> _logout() async {
     final navigator = Navigator.of(context);
     await UserRepository.instance.logout();
     navigator.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const WelcomeScreen()),
           (route) => false,
     );
+  }
+
+  Future<void> _editProfile() async {
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+    );
+    if (changed == true && mounted) {
+      setState(() {});
+    }
   }
 
   @override
@@ -30,10 +48,10 @@ class AccountTab extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 32,
-                backgroundColor: primary.withOpacity(0.15),
-                child: Icon(Icons.person, size: 36, color: primary),
+              _AvatarCircle(
+                avatarPath: user.avatarPath,
+                color: primary,
+                size: 64,
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -57,7 +75,21 @@ class AccountTab extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
+
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _editProfile,
+              icon: const Icon(Icons.edit_outlined),
+              label: const Text('Редактировать профиль'),
+              style: TextButton.styleFrom(
+                foregroundColor: primary,
+                padding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
 
           _InfoBlock(
             title: 'Тип кожи',
@@ -80,7 +112,7 @@ class AccountTab extends StatelessWidget {
           SizedBox(
             height: 54,
             child: OutlinedButton.icon(
-              onPressed: () => _logout(context),
+              onPressed: _logout,
               icon: const Icon(Icons.logout),
               label: const Text(
                 'Выйти из аккаунта',
@@ -104,6 +136,45 @@ class AccountTab extends StatelessWidget {
   }
 }
 
+class _AvatarCircle extends StatelessWidget {
+  const _AvatarCircle({
+    required this.avatarPath,
+    required this.color,
+    this.size = 64,
+  });
+
+  final String? avatarPath;
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasFile = avatarPath != null && avatarPath!.isNotEmpty;
+    final fileExists = hasFile && File(avatarPath!).existsSync();
+
+    return ClipOval(
+      child: Container(
+        width: size,
+        height: size,
+        color: color.withValues(alpha: 0.15),
+        child: (hasFile && fileExists)
+            ? Image.file(
+          File(avatarPath!),
+          fit: BoxFit.cover,
+          width: size,
+          height: size,
+          errorBuilder: (_, _, _) => _fallbackIcon(size),
+        )
+            : _fallbackIcon(size),
+      ),
+    );
+  }
+
+  Widget _fallbackIcon(double size) {
+    return Icon(Icons.person, size: size * 0.56, color: color);
+  }
+}
+
 class _InfoBlock extends StatelessWidget {
   const _InfoBlock({required this.title, required this.rows});
 
@@ -117,7 +188,7 @@ class _InfoBlock extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
