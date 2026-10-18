@@ -1,6 +1,5 @@
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
-
 import '../models/user_account.dart';
 
 /// Обёртка над SQLite: открытие БД, создание таблиц, CRUD по пользователям.
@@ -9,7 +8,7 @@ class UserDatabase {
   static final UserDatabase instance = UserDatabase._();
 
   static const String _dbName = 'skinsafe.db';
-  static const int _dbVersion = 3;
+  static const int _dbVersion = 4;
   static const String _usersTable = 'users';
   static const String _scansTable = 'scans';
 
@@ -51,7 +50,8 @@ class UserDatabase {
         product_type TEXT NOT NULL,
         composition TEXT NOT NULL,
         is_safe INTEGER NOT NULL,
-        created_at TEXT NOT NULL
+        created_at TEXT NOT NULL,
+        image_path TEXT
       )
     ''');
   }
@@ -74,6 +74,9 @@ class UserDatabase {
           created_at TEXT NOT NULL
         )
       ''');
+    }
+    if (oldVersion < 4) {
+      await db.execute('ALTER TABLE $_scansTable ADD COLUMN image_path TEXT');
     }
   }
 
