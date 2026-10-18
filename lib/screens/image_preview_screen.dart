@@ -55,9 +55,9 @@ class ImagePreviewScreen extends StatelessWidget {
                           MaterialPageRoute(
                             builder: (_) => const AnalysisScreen(
                               composition:
-                              'Aqua, Glycerin, Niacinamide, Parfum, Limonene',
+                              'Aqua, Aloe barbadensis leaf juice, Propylene Glycol, Glycerin, Sorbitol, Panthenol, Sodium Hyaluronate, Allantoin, Sodium Carbomer, Citric Acid, Sodium Hydroxide, Phenoxyethanol',
                               brand: 'Распознано с фото',
-                              productType: 'Крем',
+                              productType: 'Гель',
                             ),
                           ),
                         );
