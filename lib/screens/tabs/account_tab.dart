@@ -1,18 +1,33 @@
 import 'package:flutter/material.dart';
-
 import '../../data/user_repository.dart';
+import '../edit_profile_screen.dart';
 import '../welcome_screen.dart';
 
-class AccountTab extends StatelessWidget {
+class AccountTab extends StatefulWidget {
   const AccountTab({super.key});
 
-  Future<void> _logout(BuildContext context) async {
+  @override
+  State<AccountTab> createState() => _AccountTabState();
+}
+
+class _AccountTabState extends State<AccountTab> {
+  Future<void> _logout() async {
     final navigator = Navigator.of(context);
     await UserRepository.instance.logout();
     navigator.pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const WelcomeScreen()),
           (route) => false,
     );
+  }
+
+  Future<void> _editProfile() async {
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+    );
+    if (changed == true && mounted) {
+      setState(() {}); // перерисовка с новыми данными из UserRepository
+    }
   }
 
   @override
@@ -57,7 +72,21 @@ class AccountTab extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
+
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: _editProfile,
+              icon: const Icon(Icons.edit_outlined),
+              label: const Text('Редактировать профиль'),
+              style: TextButton.styleFrom(
+                foregroundColor: primary,
+                padding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
 
           _InfoBlock(
             title: 'Тип кожи',
@@ -80,7 +109,7 @@ class AccountTab extends StatelessWidget {
           SizedBox(
             height: 54,
             child: OutlinedButton.icon(
-              onPressed: () => _logout(context),
+              onPressed: _logout,
               icon: const Icon(Icons.logout),
               label: const Text(
                 'Выйти из аккаунта',
