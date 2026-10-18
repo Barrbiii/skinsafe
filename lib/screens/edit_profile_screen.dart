@@ -249,7 +249,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     backgroundColor: primary,
                     foregroundColor: Colors.white,
                     elevation: 4,
-                    shadowColor: primary.withOpacity(0.5),
+                    shadowColor: primary.withValues(alpha: 0.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
