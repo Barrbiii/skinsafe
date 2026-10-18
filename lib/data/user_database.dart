@@ -9,7 +9,7 @@ class UserDatabase {
   static final UserDatabase instance = UserDatabase._();
 
   static const String _dbName = 'skinsafe.db';
-  static const int _dbVersion = 2;
+  static const int _dbVersion = 3;
   static const String _table = 'users';
 
   Database? _db;
@@ -26,21 +26,23 @@ class UserDatabase {
     return _db!;
   }
 
-  Future<void> _onCreate(Database db, int version) async {
-    await db.execute('''
-    CREATE TABLE $_table (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      login TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL,
-      face_skin_type TEXT NOT NULL,
-      body_skin_type TEXT NOT NULL,
-      scalp_skin_type TEXT NOT NULL,
-      allergens TEXT NOT NULL DEFAULT '',
-      age INTEGER NOT NULL,
-      gender TEXT NOT NULL,
-      avatar_path TEXT
-    )
-    ''');
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE $_table ADD COLUMN avatar_path TEXT');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE $_scansTable (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          brand TEXT NOT NULL,
+          product_type TEXT NOT NULL,
+          composition TEXT NOT NULL,
+          is_safe INTEGER NOT NULL,
+          created_at TEXT NOT NULL
+        )
+      ''');
+    }
   }
 
   /// Вставка нового пользователя. Возвращает id.
