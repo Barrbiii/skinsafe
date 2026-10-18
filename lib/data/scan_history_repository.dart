@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+
 import '../models/scan_history.dart';
 
 class ScanHistoryRepository {
@@ -7,6 +8,7 @@ class ScanHistoryRepository {
   static final ScanHistoryRepository instance = ScanHistoryRepository._();
 
   static const String _dbName = 'skinsafe.db';
+  static const int _dbVersion = 3;
   static const String _table = 'scans';
 
   Database? _db;
@@ -14,9 +16,10 @@ class ScanHistoryRepository {
   Future<Database> _open() async {
     if (_db != null) return _db!;
     final path = join(await getDatabasesPath(), _dbName);
-    // Используем ту же БД, что и UserDatabase.
-    // Не вызываем openDatabase с onCreate — БД уже создана и мигрирована.
-    _db = await openDatabase(path, version: 3);
+    // ВАЖНО: onCreate/onUpgrade здесь НЕ передаём — они уже заданы
+    // в UserDatabase.instance. sqflite корректно переиспользует
+    // открытую БД по тому же пути, если версия совпадает.
+    _db = await openDatabase(path, version: _dbVersion);
     return _db!;
   }
 
