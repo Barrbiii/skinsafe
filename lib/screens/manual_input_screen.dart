@@ -1,3 +1,4 @@
+import 'analysis_screen.dart';
 import 'package:flutter/material.dart';
 
 class ManualInputScreen extends StatefulWidget {
@@ -45,10 +46,14 @@ class _ManualInputScreenState extends State<ManualInputScreen> {
   void _submit() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Данные сохранены (обработка появится позже)'),
-        backgroundColor: Colors.green,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AnalysisScreen(
+          composition: _compositionController.text.trim(),
+          brand: _brandController.text.trim(),
+          productType: _productType,
+        ),
       ),
     );
   }
