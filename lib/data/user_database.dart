@@ -47,6 +47,21 @@ class UserDatabase {
     return db.insert(_table, account.toMap()..remove('id'));
   }
 
+  /// Обновление существующего пользователя по id.
+  /// Возвращает количество затронутых строк (0, если не найден).
+  Future<int> update(UserAccount account) async {
+    if (account.id == null) {
+      throw ArgumentError('Нельзя обновить пользователя без id');
+    }
+    final db = await _open();
+    return db.update(
+      _table,
+      account.toMap()..remove('id'),
+      where: 'id = ?',
+      whereArgs: [account.id],
+    );
+  }
+
   /// Поиск по логину. Возвращает null, если не найден.
   Future<UserAccount?> findByLogin(String login) async {
     final db = await _open();
