@@ -6,6 +6,7 @@ class ScanHistory {
   final String composition;
   final bool isSafe;
   final DateTime createdAt;
+  final String? imagePath;
 
   ScanHistory({
     this.id,
@@ -15,6 +16,7 @@ class ScanHistory {
     required this.composition,
     required this.isSafe,
     required this.createdAt,
+    this.imagePath,
   });
 
   Map<String, Object?> toMap() {
@@ -26,6 +28,7 @@ class ScanHistory {
       'composition': composition,
       'is_safe': isSafe ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
+      'image_path': imagePath,
     };
   }
 
@@ -38,6 +41,7 @@ class ScanHistory {
       composition: map['composition'] as String,
       isSafe: (map['is_safe'] as int) == 1,
       createdAt: DateTime.parse(map['created_at'] as String),
+      imagePath: map['image_path'] as String?,
     );
   }
 }
