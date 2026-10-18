@@ -58,6 +58,7 @@ class ImagePreviewScreen extends StatelessWidget {
                               'Aqua, Aloe barbadensis leaf juice, Propylene Glycol, Glycerin, Sorbitol, Panthenol, Sodium Hyaluronate, Allantoin, Sodium Carbomer, Citric Acid, Sodium Hydroxide, Phenoxyethanol',
                               brand: 'Распознано с фото',
                               productType: 'Гель',
+                              imagePath: image.path,
                             ),
                           ),
                         );
