@@ -5,7 +5,7 @@
 // WidgetTester для поиска дочерних виджетов в дереве виджетов,
 // чтения текста и проверки значений свойств виджетов.
 
-import 'package:flutter/material.dart';
+// import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:skinsafe/main.dart';
