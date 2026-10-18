@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+
 import '../../data/user_repository.dart';
 import '../edit_profile_screen.dart';
 import '../welcome_screen.dart';
@@ -26,7 +29,7 @@ class _AccountTabState extends State<AccountTab> {
       MaterialPageRoute(builder: (_) => const EditProfileScreen()),
     );
     if (changed == true && mounted) {
-      setState(() {}); // перерисовка с новыми данными из UserRepository
+      setState(() {});
     }
   }
 
@@ -45,10 +48,10 @@ class _AccountTabState extends State<AccountTab> {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 32,
-                backgroundColor: primary.withValues(alpha: 0.15),
-                child: Icon(Icons.person, size: 36, color: primary),
+              _AvatarCircle(
+                avatarPath: user.avatarPath,
+                color: primary,
+                size: 64,
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -130,6 +133,45 @@ class _AccountTabState extends State<AccountTab> {
         ],
       ),
     );
+  }
+}
+
+class _AvatarCircle extends StatelessWidget {
+  const _AvatarCircle({
+    required this.avatarPath,
+    required this.color,
+    this.size = 64,
+  });
+
+  final String? avatarPath;
+  final Color color;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasFile = avatarPath != null && avatarPath!.isNotEmpty;
+    final fileExists = hasFile && File(avatarPath!).existsSync();
+
+    return ClipOval(
+      child: Container(
+        width: size,
+        height: size,
+        color: color.withValues(alpha: 0.15),
+        child: (hasFile && fileExists)
+            ? Image.file(
+          File(avatarPath!),
+          fit: BoxFit.cover,
+          width: size,
+          height: size,
+          errorBuilder: (_, __, ___) => _fallbackIcon(size),
+        )
+            : _fallbackIcon(size),
+      ),
+    );
+  }
+
+  Widget _fallbackIcon(double size) {
+    return Icon(Icons.person, size: size * 0.56, color: color);
   }
 }
 
