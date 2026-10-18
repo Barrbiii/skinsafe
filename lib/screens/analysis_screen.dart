@@ -12,7 +12,7 @@ class AnalysisScreen extends StatefulWidget {
     this.productType,
     this.initialIsSafe,
     this.scanId,
-    this.imagePath, // <-- НОВОЕ ПОЛЕ
+    this.imagePath,
   });
 
   final String composition;
@@ -20,7 +20,7 @@ class AnalysisScreen extends StatefulWidget {
   final String? productType;
   final bool? initialIsSafe;
   final int? scanId;
-  final String? imagePath; // <-- НОВОЕ ПОЛЕ
+  final String? imagePath;
 
   @override
   State<AnalysisScreen> createState() => _AnalysisScreenState();
@@ -76,6 +76,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     final brand = widget.brand ?? 'Без бренда';
     final productType = widget.productType ?? 'Не указано';
 
+    // ИСПРАВЛЕНО: сначала проверяем существование
     final exists = await ScanHistoryRepository.instance.exists(
       userId: user!.id!,
       brand: brand,
@@ -84,6 +85,36 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     );
 
     if (exists) {
+      // Если запись есть — попробуем обновить фото, если оно новое.
+      // Находим существующую запись, чтобы взять её id.
+      final existingList =
+      await ScanHistoryRepository.instance.getForUser(user.id!);
+      final match = existingList.firstWhere(
+            (e) =>
+        e.brand == brand &&
+            e.productType == productType &&
+            e.composition == widget.composition,
+        orElse: () => throw StateError('not found'),
+      );
+
+      if (match.imagePath != widget.imagePath &&
+          widget.imagePath != null &&
+          match.id != null) {
+        await ScanHistoryRepository.instance.updateImagePath(
+          match.id!,
+          widget.imagePath,
+        );
+        if (!mounted) return;
+        setState(() => _saved = true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Фото добавлено к существующей записи'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        return;
+      }
+
       if (!mounted) return;
       setState(() => _saved = true);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -102,7 +133,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
       composition: widget.composition,
       isSafe: _isSafe,
       createdAt: DateTime.now(),
-      imagePath: widget.imagePath, // <-- ПЕРЕДАЕМ ПУТЬ
+      imagePath: widget.imagePath,
     );
 
     await ScanHistoryRepository.instance.insert(scan);
@@ -125,7 +156,8 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Удалить', style: TextStyle(color: Colors.redAccent)),
+            child: const Text('Удалить',
+                style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
@@ -201,7 +233,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
 
         if (widget.brand != null || widget.productType != null) ...[
           Text(
-            [widget.brand, widget.productType].where((e) => e != null).join(' · '),
+            [widget.brand, widget.productType]
+                .where((e) => e != null)
+                .join(' · '),
             style: TextStyle(color: Colors.grey[600], fontSize: 14),
             textAlign: TextAlign.center,
           ),
@@ -211,7 +245,9 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: _isSafe ? Colors.green.withValues(alpha: 0.1) : Colors.redAccent.withValues(alpha: 0.1),
+            color: _isSafe
+                ? Colors.green.withValues(alpha: 0.1)
+                : Colors.redAccent.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: _isSafe ? Colors.green : Colors.redAccent,
@@ -257,15 +293,18 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
           ..._foundAllergens.map(
                 (a) => Container(
               margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
+                border: Border.all(
+                    color: Colors.redAccent.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline, color: Colors.redAccent, size: 20),
+                  const Icon(Icons.error_outline,
+                      color: Colors.redAccent, size: 20),
                   const SizedBox(width: 12),
                   Text(a, style: const TextStyle(fontSize: 16)),
                 ],
@@ -303,12 +342,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               icon: const Icon(Icons.delete_outline),
               label: const Text(
                 'Удалить из истории',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                style:
+                TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
               ),
               style: OutlinedButton.styleFrom(
                 foregroundColor: Colors.redAccent,
                 side: const BorderSide(color: Colors.redAccent, width: 2),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
               ),
             ),
           )
@@ -320,12 +361,14 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
               icon: const Icon(Icons.save_alt),
               label: const Text(
                 'Сохранить в историю',
-                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                style:
+                TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
               ),
             ),
           )
@@ -354,9 +397,12 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
             style: OutlinedButton.styleFrom(
               foregroundColor: primary,
               side: BorderSide(color: primary, width: 2),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14)),
             ),
-            child: const Text('Готово', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+            child: const Text('Готово',
+                style:
+                TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
           ),
         ),
       ],
