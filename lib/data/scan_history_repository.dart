@@ -8,7 +8,7 @@ class ScanHistoryRepository {
   static final ScanHistoryRepository instance = ScanHistoryRepository._();
 
   static const String _dbName = 'skinsafe.db';
-  static const int _dbVersion = 3;
+  static const int _dbVersion = 4;
   static const String _table = 'scans';
 
   Database? _db;
