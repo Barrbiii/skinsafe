@@ -58,10 +58,32 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
     final user = UserRepository.instance.user;
     if (user?.id == null) return;
 
-    final scan = ScanHistory(
+    final brand = widget.brand ?? 'Без бренда';
+    final productType = widget.productType ?? 'Не указано';
+
+    final exists = await ScanHistoryRepository.instance.exists(
       userId: user!.id!,
-      brand: widget.brand ?? 'Без бренда',
-      productType: widget.productType ?? 'Не указано',
+      brand: brand,
+      productType: productType,
+      composition: widget.composition,
+    );
+
+    if (exists) {
+      if (!mounted) return;
+      setState(() => _saved = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Этот состав уже есть в истории'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    final scan = ScanHistory(
+      userId: user.id!,
+      brand: brand,
+      productType: productType,
       composition: widget.composition,
       isSafe: _isSafe,
       createdAt: DateTime.now(),
